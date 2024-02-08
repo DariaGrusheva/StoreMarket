@@ -9,7 +9,7 @@ namespace StoreMarket.Contracts.Requests
         public decimal Price { get; set; } = decimal.Zero;
         public int? CategoryId { get; set; }
 
-        public Product ProductGetEntity()
+        /*public Product ProductGetEntity()
         {
             return new Product
             {
@@ -18,8 +18,6 @@ namespace StoreMarket.Contracts.Requests
                 Price = Price,
                 CategoryId = CategoryId
             };
-        }
-
-
+        }*/
     }
 }

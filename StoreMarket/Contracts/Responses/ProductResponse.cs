@@ -12,14 +12,14 @@ namespace StoreMarket.Contracts.Responses
         public int? CategoryId { get; set; }
         
 
-        public ProductResponse(Product products)
+        /*public ProductResponse(Product products)
         {
             Id = products.Id;
             Name = products.Name;
             Description = products.Description;
             Price = products.Price;
             CategoryId = products.CategoryId;
-        }
+        }*/
 
 
     }

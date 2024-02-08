@@ -13,17 +13,23 @@ namespace StoreMarket.Contexts
         public virtual DbSet<Store> Stores { get; set; }
 
         public virtual DbSet<Category> Categories { get; set; }
+        private string _connectionString;
 
-        public StoreContext()
+        public StoreContext() { }
+        public StoreContext(string connectionString)
         {
+            _connectionString = connectionString;
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder builder) =>
+        /*protected override void OnConfiguring(DbContextOptionsBuilder builder) =>
             //builder.UseSqlite("Data Source=DB\\chat.db");
-            builder.LogTo(Console.WriteLine)
+            builder.UseLazyLoadingProxies()
+                //builder.LogTo(Console.WriteLine)
                 //.UseLazyLoadingProxies()
-                .UseNpgsql("Host=localhost;Port=5432;Username=postgres;Password=example;Database=store_market");
-
+                .UseNpgsql();//("Host=localhost;Port=5432;Username=postgres;Password=example;Database=store_market");*/
+        protected override void OnConfiguring(DbContextOptionsBuilder builder) =>
+            builder.UseLazyLoadingProxies()
+                .UseNpgsql(_connectionString);
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Product>(entity =>

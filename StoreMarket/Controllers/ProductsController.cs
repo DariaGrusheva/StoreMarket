@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Distributed;
+using StoreMarket.Abstraction;
 using StoreMarket.Contexts;
 using StoreMarket.Contracts.Requests;
 using StoreMarket.Contracts.Responses;
@@ -8,52 +11,46 @@ using StoreMarket.Models;
 
 namespace StoreMarket.Controllers
 {
+    
+
     [ApiController]
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
+        private readonly IProductServices _productServices;
+        
+
+        public ProductsController(IProductServices productServices)
+        {
+            _productServices = productServices;
+            
+        }
+
         [HttpGet]
         [Route("products/{id}")]
-
-        public ActionResult<ProductResponse> GetProduct(int id)
+        public ActionResult<ProductResponse> GetProductById(int id)
         {
-            var result = storeContext.Products.FirstOrDefault(p => p.Id == id);
-            if (result == null)
-            {
-                return NotFound();
-            }
-            else
-            {
-                return Ok(new ProductResponse(result));
-            }
-
+            var product = _productServices.GetProductById(id);
+            return Ok(product);
         }
 
 
         [HttpGet]
         [Route("products")]
-
         public ActionResult<IEnumerable<ProductResponse>> GetProducts()
         {
-            IEnumerable<Product> result = storeContext.Products;
-
-           // IEnumerable<ProductResponse> products = result.Select(result => new ProductResponse(result));
-
-            return Ok(result.Select(result => new ProductResponse(result)));
+           var products = _productServices.GetProducts();
+            return Ok(products);
         }
 
         [HttpPost]
         [Route("products")]
-
-        public ActionResult<ProductResponse> AddProducts(ProductCreateRequest request)
+        public ActionResult<int> AddProducts(ProductCreateRequest request)
         {
-            Product product = request.ProductGetEntity();
             try
             {
-                var result = storeContext.Products.Add(product).Entity;
-
-                storeContext.SaveChanges();
-                return Ok(new ProductResponse(result));
+                int id = _productServices.AddProduct(request);
+                return Ok(id);
             }
             catch (Exception ex)
             {
@@ -63,40 +60,42 @@ namespace StoreMarket.Controllers
         }
 
 
-        // Удаление по Id
-/*        [HttpPost]
-        [Route("products")]
-        public ActionResult<ProductResponse> DeleteProducts(int id)
-        {
-                Product? products = storeContext.Products.FirstOrDefault(p => p.Id == id); 
-                if (products != null)
-                {
-                    storeContext.Products.Remove(products);
-                    storeContext.SaveChanges();
-                    return Ok(new ProductDeleteResponse(products));
-                }
-            return NotFound();
-        }*/
-
-
 
         [HttpDelete]
         [Route("products")]
-        public ActionResult<ProductResponse> DeleteProducts(ProductDeleteRequest request)
+        public ActionResult<int> DeleteProduct(ProductDeleteRequest request)
         {
-
-            Product? product = storeContext.Products.FirstOrDefault(p => p.Id == request.Id);
-            if (product != null)
+            try
             {
-                storeContext.Products.Remove(product); 
-                storeContext.SaveChanges();
-                return Ok(new ProductDeleteResponse(product));
+                int idDeletingProduct = _productServices.DeleteProduct(request.Id);
+                return Ok(idDeletingProduct);
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
+        // Удаление по Id
+        /*        [HttpPost]
+                [Route("products")]
+                public ActionResult<ProductResponse> DeleteProducts(int id)
+                {
+                        Product? products = storeContext.Products.FirstOrDefault(p => p.Id == id); 
+                        if (products != null)
+                        {
+                            storeContext.Products.Remove(products);
+                            storeContext.SaveChanges();
+                            return Ok(new ProductDeleteResponse(products));
+                        }
+                    return NotFound();
+                }*/
+
+
+
+
         // Изменение цены через id и Price
-        [HttpGet]
+        /*[HttpGet]
         [Route("changeprice")]
         public ActionResult<ProductResponse> PriceProducts(int id, int price)
         {
@@ -108,10 +107,10 @@ namespace StoreMarket.Controllers
                 return Ok(new ProductResponse(product)); ;
             }
             return NotFound();
-        }
+        }*/
 
 
-        [HttpPut]
+        /*[HttpPut]
         [Route("products")]
 
         public ActionResult<ProductResponse> PriceProducts(ProductUpdateRequest request)
@@ -129,13 +128,24 @@ namespace StoreMarket.Controllers
             }
 
         }
-       
-        private StoreContext storeContext;
+       */
 
-        public ProductsController(StoreContext context)
+        [HttpGet(template: "GetProductsCSV")]
+        public FileContentResult GetProductsCSV()
+        {
+
+            var content = "";
+            var products = _productServices.GetProducts();
+            content = _productServices.GetCsv(products);
+            return File(new System.Text.UTF8Encoding().GetBytes(content), "text/csv", "report.csv");
+         }
+
+        //private StoreContext storeContext;
+
+        /*public ProductsController(StoreContext context)
         {
             storeContext = context;
 
-        }
+        }*/
     }
 }
